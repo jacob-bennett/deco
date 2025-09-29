@@ -13,7 +13,7 @@
   "license": "MIT",
   "author": "Jacob Bennett <jacob@jacobbennett.tech>",
   "type": "module",
-  "main": "src/iq.js",
+  "main": "src/deco.js",
   "directories": {
     "test": "test"
   },
