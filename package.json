@@ -1,0 +1,24 @@
+{
+  "name": "deco",
+  "version": "0.1.0",
+  "description": "",
+  "homepage": "https://github.com/jacob-bennett/deco#readme",
+  "bugs": {
+    "url": "https://github.com/jacob-bennett/deco/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacob-bennett/deco.git"
+  },
+  "license": "MIT",
+  "author": "Jacob Bennett <jacob@jacobbennett.tech>",
+  "type": "module",
+  "main": "src/iq.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {}
+}
