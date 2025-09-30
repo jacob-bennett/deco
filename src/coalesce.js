@@ -1,21 +1,25 @@
-// TODO custom key generator for more complex parameters
-export const coalesce = (fn) => {
+export const coalesce = (fn, generateKey) => {
     const inFlightRequests = new Map()
 
     return async (...args) => {
-        validateArgs(args);
-
-        const key = args.join('|')
+        let key;
+        if (generateKey) {
+            key = generateKey(...args);
+        } else {
+            validateArgs(args);
+            key = args.join('|')
+        }
 
         if (inFlightRequests.has(key)) {
             return inFlightRequests.get(key)
         }
 
-        const promise = new Promise(async (resolve) => {
-            const result = await fn(...args);
-            inFlightRequests.delete(key)
-            resolve(result);
-        });
+        const promise = fn(...args)
+            .then((result) => {
+                inFlightRequests.delete(key)
+                return result;
+            });
+
 
         inFlightRequests.set(key, promise)
 

@@ -143,9 +143,43 @@ describe("Coalescer", () => {
 
     })
 
-    // TODO
-    test.skip("Coalesce with custom key generator", () => {
-        it("", async (t) => {
+    test("Coalesce with custom key generator", () => {
+        it("Executes with primitive values", async () => {
+            let timesCalled = 0
+            const fn = async () => timesCalled++;
+
+            const generateKey = (param1, param2) => {
+                return `${param1}-${param2}`
+            }
+
+            const decoratedFn = coalesce(fn, generateKey);
+
+            await Promise.all([
+                decoratedFn('key', 'one', 'hello'),
+                decoratedFn('key', 'one', 'world'),
+                decoratedFn('key', 'two', 'goodbye'),
+            ]);
+
+            assert.strictEqual(timesCalled, 2)
+        })
+
+        it("Executes with object", async () => {
+            let timesCalled = 0
+            const fn = async () => timesCalled++;
+
+            const generateKey = (user) => {
+                return `${user.firstName}-${user.lastName}`
+            }
+
+            const decoratedFn = coalesce(fn, generateKey);
+
+            await Promise.all([
+                decoratedFn({firstName: "jacob", lastName: "bennett", requestId: '1' }),
+                decoratedFn({firstName: "jacob", lastName: "bennett", requestId: '2' }),
+                decoratedFn({firstName: "jacob", lastName: "peter", requestId: '4' }),
+            ]);
+
+            assert.strictEqual(timesCalled, 2)
         })
     })
 });
