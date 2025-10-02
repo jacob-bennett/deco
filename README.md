@@ -42,7 +42,7 @@ await Promise.all([
 If the values passed to the coalesced function are not *strings*, *integers* or *booleans*, you'll need to provide a `generateKey` callback.  
 
 ```javascript
-// Example async function, which takes an object as it's input
+// Example async function, which takes an object as its input
 const getPackage = async (pkg) => {}
 
 // Return a string which will be used to identify duplicate requests
