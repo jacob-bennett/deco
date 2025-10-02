@@ -10,6 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/jacob-bennett/deco.git"
   },
+  "files": ["src/", "README.md"],
   "license": "MIT",
   "author": "Jacob Bennett <jacob@jacobbennett.tech>",
   "type": "module",
