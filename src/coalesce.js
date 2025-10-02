@@ -15,11 +15,7 @@ export const coalesce = (fn, generateKey) => {
         }
 
         const promise = fn(...args)
-            .then((result) => {
-                inFlightRequests.delete(key)
-                return result;
-            });
-
+            .finally(() => inFlightRequests.delete(key))
 
         inFlightRequests.set(key, promise)
 

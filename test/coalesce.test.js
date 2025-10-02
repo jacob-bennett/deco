@@ -134,11 +134,25 @@ describe("Coalescer", () => {
             })
         })
 
-        // TODO
-        it.skip("Returns error if the decorated function call fails", async (t) => {
-        })
-        // TODO
-        it.skip("Removes key from the map if the decorated function call fails", async (t) => {
+        it("Throws error and removes coalesce key when the decorated function call fails", async () => {
+            let throwError = true
+            const decoratedFn = coalesce(async () => {
+                if (throwError) {
+                    throw new Error('TestError')
+                }
+
+                return 'success'
+            });
+
+
+            await assert.rejects(() => decoratedFn('param'), {
+                name: "Error",
+                message: "TestError"
+            })
+
+            throwError = false;
+            const result = await decoratedFn('param')
+            assert.strictEqual(result, "success")
         })
 
     })
