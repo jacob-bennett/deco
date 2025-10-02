@@ -1,5 +1,5 @@
 # Deco
-Deco is a zero dependency collection of composable asynchronous decorators.  
+Zero dependency collection of composable asynchronous decorators.
 
 ## Roadmap
 - [x] Request coalescing
