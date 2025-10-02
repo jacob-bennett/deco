@@ -1,19 +1,21 @@
 # Deco
-**Deco** is a zero dependency collection of composable asynchronous decorators.  
+Deco is a zero dependency collection of composable asynchronous decorators.  
 
 ## Roadmap
-* [x] Request coalescing
-* [ ] Concurrency limiting
-* [ ] In-memory caching
-* [ ] Jitter
-* [ ] Rate limiting / Throttling
-* [ ] Retry mechanism
+- [x] Request coalescing
+- [ ] Concurrency limiting
+- [ ] In-memory caching
+- [ ] Jitter
+- [ ] Rate limiting / Throttling
+- [ ] Retry mechanism
 
 💡 Have a feature idea? [Raise an issue](https://github.com/jacob-bennett/deco/issues/new?title=Feature%20request:%20).
 
 
 ## Install
-```npm install @jacobbennett/deco```
+```bash
+npm install @jacben/deco
+```
 
 
 ## Decorators
@@ -21,7 +23,7 @@
 Deduplicate identical in-flight requests by combining them into one call.
 
 ```javascript
-import { coalesce } from "deco";
+import { coalesce } from "@jacben/deco";
 
 // Example async function
 const getUserById = async (id) => {}
