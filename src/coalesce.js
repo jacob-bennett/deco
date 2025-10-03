@@ -17,7 +17,7 @@ export const coalesce = (fn, generateKey) => {
             key = generateKey(...args);
         } else {
             validateArgs(args);
-            key = args.join('|')
+            key = args.map(prependType).join('|')
         }
 
         if (inFlightRequests.has(key)) {
@@ -60,6 +60,22 @@ const validateArgs = args => {
         }
     })
 };
+
+/**
+ * Distinguishes between different data types to prevent clashes.
+ * @param {string|number|boolean} value
+ * @returns {string}
+ */
+const prependType = (value) => {
+    switch (typeof value) {
+        case 'string':
+            return `s${value}`;
+        case 'number':
+            return `n${value}`;
+        case 'boolean':
+            return `b${value}`;
+    }
+}
 
 /**
  * Error thrown when a key cannot be generated for coalescing.

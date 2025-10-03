@@ -74,6 +74,34 @@ describe("Coalescer", () => {
             assert.strictEqual(timesCalled, 2)
         })
 
+        it("Distinguishes between different data types - strings and booleans", async () => {
+            let timesCalled = 0
+            const fn = async () => timesCalled++;
+
+            const decoratedFn = coalesce(fn);
+
+            await Promise.all([
+                decoratedFn(true),
+                decoratedFn('true'),
+            ]);
+
+            assert.strictEqual(timesCalled, 2)
+        })
+
+        it("Distinguishes between different data types - strings and integers", async () => {
+            let timesCalled = 0
+            const fn = async () => timesCalled++;
+
+            const decoratedFn = coalesce(fn);
+
+            await Promise.all([
+                decoratedFn(1),
+                decoratedFn('1'),
+            ]);
+
+            assert.strictEqual(timesCalled, 2)
+        })
+
         it("Throws error if no parameters are provided", async (t) => {
             const fn = async () => {
             };
