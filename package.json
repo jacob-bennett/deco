@@ -18,7 +18,8 @@
   },
   "files": [
     "src/",
-    "README.md"
+    "README.md",
+    "types/"
   ],
   "license": "MIT",
   "author": "Jacob Bennett <jacob@jacobbennett.tech>",
@@ -27,8 +28,13 @@
   "directories": {
     "test": "test"
   },
+  "types": "types/deco.d.ts",
   "scripts": {
-    "test": "node --test test/*"
+    "test": "node --test test/*",
+    "test:cov": "node --test --experimental-test-coverage",
+    "types": "npx tsc"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
 }

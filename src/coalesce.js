@@ -1,3 +1,13 @@
+/**
+ * Wraps an asynchronous function to coalesce identical in-flight calls.
+ *
+ * @template {any[]} Args - Argument types of the original async function
+ * @template Return - Type returned by the promise of the original async function
+ * @param {(...args: Args) => Promise<Return>} fn - The asynchronous function to wrap
+ * @param {(...args: Args) => string} [generateKey] - Optional function to generate a unique key.
+ *
+ * @returns {(...args: Args) => Promise<Return>} Wrapped function
+ */
 export const coalesce = (fn, generateKey) => {
     const inFlightRequests = new Map()
 
@@ -23,6 +33,14 @@ export const coalesce = (fn, generateKey) => {
     }
 };
 
+/**
+ * Validates arguments for automatic key generation.
+ * Throws a CoalesceKeyError if any argument is invalid.
+ *
+ * @param {Array<string|number|boolean>} args
+ * @throws {CoalesceKeyError}
+ * @private
+ */
 const validateArgs = args => {
     if (args.length < 1) {
         throw new CoalesceKeyError('Unable to generate key: No parameters provided')
@@ -43,7 +61,14 @@ const validateArgs = args => {
     })
 };
 
+/**
+ * Error thrown when a key cannot be generated for coalescing.
+ * @extends {Error}
+ */
 class CoalesceKeyError extends Error {
+    /**
+     * @param {string} message
+     */
     constructor(message) {
         super(message);
         this.name = 'CoalesceKeyError';

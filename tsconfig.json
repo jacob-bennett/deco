@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./types"
+  },
+  "include": [
+    "./src/**/*.js"
+  ]
+}
