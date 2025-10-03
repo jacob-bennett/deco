@@ -102,15 +102,21 @@ describe("Coalescer", () => {
             assert.strictEqual(timesCalled, 2)
         })
 
-        it("Throws error if no parameters are provided", async (t) => {
-            const fn = async () => {
-            };
+        it("Coalesces calls with no parameters", async (t) => {
+            let timesCalled = 0
+            const fn = async () => timesCalled++;
+
             const decoratedFn = coalesce(fn);
 
-            await assert.rejects(() => decoratedFn(), {
-                name: "CoalesceKeyError",
-                message: "Unable to generate key: No parameters provided"
-            })
+            await Promise.all([
+                decoratedFn(),
+                decoratedFn()
+            ]);
+
+            await  decoratedFn();
+
+            assert.strictEqual(timesCalled, 2)
+
         })
 
         it("Throws error if an unsafe number is provided", async (t) => {

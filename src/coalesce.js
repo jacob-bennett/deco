@@ -12,13 +12,7 @@ export const coalesce = (fn, generateKey) => {
     const inFlightRequests = new Map()
 
     return async (...args) => {
-        let key;
-        if (generateKey) {
-            key = generateKey(...args);
-        } else {
-            validateArgs(args);
-            key = args.map(prependType).join('|')
-        }
+        const key = createKey(args, generateKey);
 
         if (inFlightRequests.has(key)) {
             return inFlightRequests.get(key)
@@ -34,6 +28,26 @@ export const coalesce = (fn, generateKey) => {
 };
 
 /**
+ * Generates a unique coalesce key.
+ *
+ * @param {any[]} args
+ * @param {Function|undefined} generateKey
+ * @returns {string}
+ */
+const createKey = (args, generateKey) => {
+    if (generateKey) {
+        return generateKey(...args);
+    }
+
+    if (args.length > 0) {
+        validateArgs(args);
+        return args.map(prependType).join('|')
+    }
+
+    return 'DEFAULT'
+};
+
+/**
  * Validates arguments for automatic key generation.
  * Throws a CoalesceKeyError if any argument is invalid.
  *
@@ -42,10 +56,6 @@ export const coalesce = (fn, generateKey) => {
  * @private
  */
 const validateArgs = args => {
-    if (args.length < 1) {
-        throw new CoalesceKeyError('Unable to generate key: No parameters provided')
-    }
-
     args.forEach((arg) => {
         if (typeof arg !== 'string' && typeof arg !== 'number' && typeof arg !== 'boolean') {
             throw new CoalesceKeyError(`Invalid parameter type: ${typeof arg}.\nCreate a generateKey callback to use complex data types.`);
