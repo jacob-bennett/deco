@@ -30,7 +30,7 @@ import { coalesce } from "@jacben/deco";
 // Example async function
 const getUserById = async (id) => {}
 
-// Wrap original function
+// Wrap the original function so requests with the same values are coalesced
 const coalescedGetUserById = coalesce(getUserById);
 
 // Only one call to getUserById occurs, even though it is called twice.
@@ -40,19 +40,25 @@ await Promise.all([
 ]); 
 ```
 
-#### Coalesce keys
-If the values passed to the coalesced function are not *strings*, *integers* or *booleans*, you'll need to provide a `generateKey` callback.  
+#### Generating coalesce keys
+If the values passed to the coalesced function are not *strings*, *numbers* or *booleans*, you'll need to provide a `generateKey` callback.  
 
 ```javascript
 // Example async function, which takes an object as its input
 const getPackage = async (pkg) => {}
 
-// Return a string which will be used to identify duplicate requests
+// Return a key which uniquely identifies this input
 const generateKey = (pkg) => `${pkg.name}@${pkg.version}`;
 
+// Provide custom generateKey function as an argument
 const coalescedGetPackage = coalesce(getPackage, generateKey); 
+
+// You can now pass in the full pkg object
 await coalescedGetPackage(pkg);
 ```
+> ⚠️ **Beware of collisions** when dealing with user input.  
+> For example, if your generateKey function is implemented as `(...args) => args.map(arg).join('|')`,  
+> then `generateKey("a", "a")` would have the same output as `generateKey("a|a")`.
 
 ## Contact
 If you'd like to suggest a feature, report an issue or ask a question, feel free to [raise an issue](https://github.com/jacob-bennett/deco/issues/new).

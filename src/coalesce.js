@@ -41,11 +41,44 @@ const createKey = (args, generateKey) => {
 
     if (args.length > 0) {
         validateArgs(args);
-        return args.map(prependType).join('|')
+        const safeArgs = sanitiseArgs(args);
+        const key = safeArgs.join('|')
+        // Prevent collisions e.g. ("one", "two") vs ("one|two") by appending the number of arguments.
+        return `${key}|${safeArgs.length}`
     }
 
     return 'DEFAULT'
 };
+
+
+/**
+ * Sanitises arguments to prevent clashes
+ * @param {any[]} args
+ * @returns {string[]}
+ */
+const sanitiseArgs = args => args.map((key) => wrap(prependType(key)));
+
+/**
+ * @param {string} arg
+ * @returns {string}
+ */
+const wrap = (arg) => `{${arg}}`
+
+/**
+ * Distinguishes between different data types to prevent clashes.
+ * @param {string|number|boolean} value
+ * @returns {string}
+ */
+const prependType = (value) => {
+    switch (typeof value) {
+        case 'string':
+            return `s${value}`;
+        case 'number':
+            return `n${value}`;
+        case 'boolean':
+            return `b${value}`;
+    }
+}
 
 /**
  * Validates arguments for automatic key generation.
@@ -70,22 +103,6 @@ const validateArgs = args => {
         }
     })
 };
-
-/**
- * Distinguishes between different data types to prevent clashes.
- * @param {string|number|boolean} value
- * @returns {string}
- */
-const prependType = (value) => {
-    switch (typeof value) {
-        case 'string':
-            return `s${value}`;
-        case 'number':
-            return `n${value}`;
-        case 'boolean':
-            return `b${value}`;
-    }
-}
 
 /**
  * Error thrown when a key cannot be generated for coalescing.

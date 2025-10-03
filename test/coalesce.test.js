@@ -102,6 +102,41 @@ describe("Coalescer", () => {
             assert.strictEqual(timesCalled, 2)
         })
 
+        it("Prevents key collisions", async () => {
+            let timesCalled = 0
+            const fn = async () => timesCalled++;
+
+            const decoratedFn = coalesce(fn);
+
+            await Promise.all([
+                decoratedFn('||', '|'),
+                decoratedFn('|', '||'),
+
+                decoratedFn('|||', '||'),
+                decoratedFn('||', '||'),
+
+                decoratedFn('|', ''),
+                decoratedFn('', '|'),
+
+                decoratedFn('a|b', 'c'),
+                decoratedFn('a', 'b|c'),
+
+                decoratedFn('', 'a'),
+                decoratedFn('s', 'a'),
+
+                decoratedFn('s', ''),
+                decoratedFn('s}|{s'),
+
+                decoratedFn('', 'one'),
+                decoratedFn('one', ''),
+
+                decoratedFn('one','two'),
+                decoratedFn('one}|{stwo'),
+            ]);
+
+            assert.strictEqual(timesCalled, 16)
+        })
+
         it("Coalesces calls with no parameters", async (t) => {
             let timesCalled = 0
             const fn = async () => timesCalled++;
