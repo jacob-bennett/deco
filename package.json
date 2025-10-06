@@ -1,6 +1,6 @@
 {
   "name": "@jacben/deco",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Zero dependency collection of composable asynchronous decorators.",
   "keywords": [
     "coalesce",
