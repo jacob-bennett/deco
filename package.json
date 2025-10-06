@@ -1,9 +1,11 @@
 {
   "name": "@jacben/deco",
   "version": "0.1.3",
-  "description": "",
+  "description": "Zero dependency collection of composable asynchronous decorators.",
   "keywords": [
+    "coalesce",
     "coalescing",
+    "deduplicate",
     "deduplication",
     "async",
     "optimization",

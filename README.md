@@ -1,5 +1,6 @@
 # Deco
 [![Coverage Status](https://coveralls.io/repos/github/jacob-bennett/deco/badge.svg?branch=main)](https://coveralls.io/github/jacob-bennett/deco?branch=main)
+[![npm version](https://img.shields.io/npm/v/@jacben/deco.svg)](https://www.npmjs.com/package/@jacben/deco)
 
 Zero dependency collection of composable asynchronous decorators.
 
@@ -50,7 +51,7 @@ const getPackage = async (pkg) => {}
 // Return a key which uniquely identifies this input
 const generateKey = (pkg) => `${pkg.name}@${pkg.version}`;
 
-// Provide custom generateKey function as an argument
+// Provide generateKey as an argument
 const coalescedGetPackage = coalesce(getPackage, generateKey); 
 
 // You can now pass in the full pkg object
