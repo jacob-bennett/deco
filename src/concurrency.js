@@ -4,7 +4,7 @@ export const concurrency = (fn, limit) => {
     const queue = [];
     let processing = 0;
 
-    const next = async () => {
+    const next = () => {
         const {args, resolve} = queue.shift();
         run(args).then((result) => resolve(result))
     }
@@ -15,7 +15,7 @@ export const concurrency = (fn, limit) => {
         const result = await fn(...args);
         processing--
 
-        if (processing < limit && queue.length > 0) {
+        if (queue.length > 0) {
             next()
         }
         return result;
