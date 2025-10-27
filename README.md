@@ -6,7 +6,7 @@ Zero dependency collection of composable asynchronous decorators.
 
 ## Roadmap
 - [x] Request coalescing
-- [ ] Concurrency limiting
+- [x] Concurrency limiting
 - [ ] In-memory caching
 - [ ] Jitter
 - [ ] Rate limiting / Throttling
@@ -20,13 +20,12 @@ Zero dependency collection of composable asynchronous decorators.
 npm install @jacben/deco
 ```
 
-
 ## Decorators
 ### Request Coalescing
 Deduplicate identical in-flight requests by combining them into one call.
 
 ```javascript
-import { coalesce } from "@jacben/deco";
+import {coalesce} from "@jacben/deco";
 
 // Example async function
 const getUserById = async (id) => {}
@@ -60,6 +59,49 @@ await coalescedGetPackage(pkg);
 > ⚠️ **Beware of collisions** when dealing with user input.  
 > For example, if your generateKey function is implemented as `(...args) => args.map(arg).join('|')`,  
 > then `generateKey("a", "a")` would have the same output as `generateKey("a|a")`.
+
+### Concurrency Limiting
+Limit how many requests can run concurrently.
+
+```javascript
+import {limit} from "@jacben/deco";
+
+// Example async function
+const getUserById = async (id) => {}
+
+// Allow a maximum of 2 concurrent requests to getUserById
+const limitedGetUserById = limit(getUserById, 2);
+
+// The third request will not start until the first or second finishes
+await Promise.all([
+    limitedGetUserById(1),
+    limitedGetUserById(2),
+    limitedGetUserById(3),
+]);
+```
+
+## Combining decorators
+If you want to limit concurrent requests but allow identical requests to bypass this limit, you can combine decorators:
+
+```javascript
+import {coalesce, limit} from '@jacben/deco'
+
+let fn = async () => {}
+fn = limit(fn, 5)
+fn = coalesce(fn)
+```
+
+The resulting chain would be: `Request -> coalesce -> limit -> original function`.  
+Any duplicate requests to coalesce do not hit to the next function in the chain. Therefore, the concurrency limit does not apply to identical requests.
+
+In reverse, if you want to limit calls and then dedupe identical request, you would decorate in the reverse order:
+```javascript
+import {coalesce, limit} from '@jacben/deco'
+
+let fn = async () => {}
+fn = coalesce(fn)
+fn = limit(fn, 5)
+```
 
 ## Contact
 If you'd like to suggest a feature, report an issue or ask a question, feel free to [raise an issue](https://github.com/jacob-bennett/deco/issues/new).
