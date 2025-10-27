@@ -1,6 +1,6 @@
 import {it, describe} from "node:test"
 import assert from "node:assert/strict";
-import {concurrency} from "../src/concurrency.js";
+import {limit} from "../src/limit.js";
 
 const nextTick = () => new Promise(resolve => process.nextTick(resolve));
 
@@ -11,7 +11,7 @@ describe("Concurrency", () => {
             return text;
         }
 
-        const decoratedFn = concurrency(fn, 3);
+        const decoratedFn = limit(fn, 3);
 
         const results = await Promise.all([
             decoratedFn('One'),
@@ -30,7 +30,7 @@ describe("Concurrency", () => {
             return text;
         }
 
-        const decoratedFn = concurrency(fn, 1);
+        const decoratedFn = limit(fn, 1);
 
         const results = await Promise.all([
             decoratedFn('One'),
@@ -50,7 +50,7 @@ describe("Concurrency", () => {
         const fn = (text) => new Promise((resolve) => resolvers.push(resolve))
             .then(() => text)
 
-        const decoratedFn = concurrency(fn, 2);
+        const decoratedFn = limit(fn, 2);
 
         const promise1 = decoratedFn('One');
         const promise2 = decoratedFn('Two');
@@ -70,7 +70,7 @@ describe("Concurrency", () => {
         const fn = () => new Promise((resolve) => resolvers.push(resolve))
             .then(() => 'complete')
 
-        const decoratedFn = concurrency(fn, 1);
+        const decoratedFn = limit(fn, 1);
 
         const promise1 = decoratedFn();
         const promise2 = decoratedFn();
@@ -94,7 +94,7 @@ describe("Concurrency", () => {
 
     it("Maintains processing count", {timeout: 1000}, async () => {
         const fn = async () => {}
-        const decoratedFn = concurrency(fn, 1);
+        const decoratedFn = limit(fn, 1);
 
         await decoratedFn();
 
@@ -109,7 +109,7 @@ describe("Concurrency", () => {
             }
         }
 
-        const decoratedFn = concurrency(fn, 1);
+        const decoratedFn = limit(fn, 1);
 
         await assert.rejects(() => decoratedFn(true), {
             message: 'Expected error',
@@ -122,7 +122,7 @@ describe("Concurrency", () => {
     it("Handles sync tasks", async () => {
         const fn = (text) => text
 
-        const decoratedFn = concurrency(fn, 1);
+        const decoratedFn = limit(fn, 1);
 
         const results = await Promise.all([
             decoratedFn('One'),
@@ -136,7 +136,7 @@ describe("Concurrency", () => {
     // Impossible with current implementation due to using
     // async/await. Here just in case the implementation changes.
     it("Doesn't hit call stack limit", async () => {
-        const decoratedFn = concurrency(nextTick, 2);
+        const decoratedFn = limit(nextTick, 2);
 
         const promises = [];
         for (let i = 0; i < 10_000; i++) {

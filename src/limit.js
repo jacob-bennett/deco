@@ -1,4 +1,4 @@
-export const concurrency = (fn, limit) => {
+export const limit = (fn, limit) => {
     validateArgs(fn, limit);
 
     const queue = [];

@@ -1,7 +1,7 @@
 import {coalesce} from "./coalesce.js";
-import {concurrency} from "./concurrency.js";
+import {limit} from "./limit.js";
 
 export {
     coalesce,
-    concurrency,
+    limit,
 }
