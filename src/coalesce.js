@@ -3,7 +3,7 @@
  *
  * @template {any[]} Args - Argument types of the original async function
  * @template Return - Type returned by the promise of the original async function
- * @param {(...args: Args) => Promise<Return>} fn - The asynchronous function to wrap
+ * @param {(...args: Args) => Promise<Return> | Return} fn - The function to wrap
  * @param {(...args: Args) => string} [generateKey] - Optional function to generate a unique key.
  *
  * @returns {(...args: Args) => Promise<Return>} Wrapped function
@@ -18,7 +18,8 @@ export const coalesce = (fn, generateKey) => {
             return inFlightRequests.get(key)
         }
 
-        const promise = fn(...args)
+        const promise = Promise.resolve()
+            .then(() => fn(...args))
             .finally(() => inFlightRequests.delete(key))
 
         inFlightRequests.set(key, promise)

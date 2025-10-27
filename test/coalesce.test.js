@@ -151,7 +151,6 @@ describe("Coalescer", () => {
             await  decoratedFn();
 
             assert.strictEqual(timesCalled, 2)
-
         })
 
         it("Throws error if an unsafe number is provided", async (t) => {
@@ -165,6 +164,20 @@ describe("Coalescer", () => {
                 name: "CoalesceKeyError",
                 message: "Unable to generate key: Provided integer exceeds maximum safe integer size"
             })
+        })
+
+        // While it wouldn't make sense to coalesce synchronous functions, it is
+        // possible that the decorated function returns promises conditionally.
+        it("Supports sync functions", async () => {
+            let timesCalled = 0
+            const fn = () => {
+                timesCalled++
+            }
+
+            const decoratedFn = coalesce(fn);
+            await decoratedFn();
+
+            assert.strictEqual(timesCalled, 1)
         })
 
         it("Throws error if non-supported data types are provided", async (t) => {

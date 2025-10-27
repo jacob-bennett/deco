@@ -119,6 +119,8 @@ describe("Concurrency", () => {
         await decoratedFn(false);
     })
 
+    // While it wouldn't make sense to coalesce synchronous functions, it is
+    // possible that the decorated function returns promises conditionally.
     it("Handles sync tasks", async () => {
         const fn = (text) => text
 
