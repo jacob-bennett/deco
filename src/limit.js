@@ -32,11 +32,15 @@ export const limit = (fn, limit) => {
 }
 
 const validateArgs = (fn, limit) => {
-    // TODO test
     if (typeof fn !== 'function') {
         throw new TypeError('parameter must be a function');
     }
-    if (typeof limit !== 'number' || limit < 1) {
+
+    if (typeof limit !== 'number') {
+        throw new TypeError('limit must be a number');
+    }
+
+    if ( limit < 1) {
         throw new TypeError('limit must be >= 1');
     }
 }

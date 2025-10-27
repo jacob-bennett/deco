@@ -102,7 +102,7 @@ describe("Concurrency", () => {
         await decoratedFn();
     })
 
-    it("Maintains processing count on error", {timeout: 1000}, async (t) => {
+    it("Maintains processing count on error", {timeout: 1000}, async () => {
         const fn = async (throwErr) => {
             if (throwErr) {
                 throw new Error('Expected error');
@@ -130,6 +130,24 @@ describe("Concurrency", () => {
         ]);
 
         assert.deepStrictEqual(results, ['One', 'Two']);
+    })
+
+    it("Validates parameters", async () => {
+        assert.throws(() => limit('str', 1), {
+            name: "TypeError",
+            message: 'parameter must be a function',
+        });
+
+        assert.throws(() => limit(() => {}, 'str'), {
+            name: "TypeError",
+            message: 'limit must be a number',
+        });
+
+
+        assert.throws(() => limit(() => {}, -1), {
+            name: "TypeError",
+            message: 'limit must be >= 1',
+        });
     })
 
 
