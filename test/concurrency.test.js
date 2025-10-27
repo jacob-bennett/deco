@@ -2,7 +2,6 @@ import {it, describe} from "node:test"
 import assert from "node:assert/strict";
 import {concurrency} from "../src/concurrency.js";
 
-const immediate = () => new Promise(resolve => setImmediate(resolve));
 const nextTick = () => new Promise(resolve => process.nextTick(resolve));
 
 describe("Concurrency", () => {
@@ -12,18 +11,16 @@ describe("Concurrency", () => {
             return text;
         }
 
-        const decoratedFn = concurrency(fn, 4);
+        const decoratedFn = concurrency(fn, 3);
 
         const results = await Promise.all([
             decoratedFn('One'),
             decoratedFn('Two'),
-            decoratedFn('Three')
         ]);
 
         assert.deepStrictEqual(results, [
             'One',
             'Two',
-            'Three'
         ]);
     })
 
@@ -35,7 +32,6 @@ describe("Concurrency", () => {
 
         const decoratedFn = concurrency(fn, 1);
 
-
         const results = await Promise.all([
             decoratedFn('One'),
             decoratedFn('Two'),
@@ -49,9 +45,8 @@ describe("Concurrency", () => {
         ]);
     })
 
-    it("Runs tasks concurrently", async () => {
+    it("Reaches concurrency limit", async () => {
         const resolvers = []
-
         const fn = (text) => new Promise((resolve) => resolvers.push(resolve))
             .then(() => text)
 
@@ -59,6 +54,8 @@ describe("Concurrency", () => {
 
         const promise1 = decoratedFn('One');
         const promise2 = decoratedFn('Two');
+
+        await nextTick();
 
         // Resolvers is populated when tasks run, so here we check the first 2 tasks have started
         assert.strictEqual(resolvers.length, 2);
@@ -68,9 +65,8 @@ describe("Concurrency", () => {
         await Promise.all([promise1, promise2])
     })
 
-    it("Obeys concurrency limit", async () => {
+    it("Does not exceed concurrency limit", async () => {
         const resolvers = []
-
         const fn = () => new Promise((resolve) => resolvers.push(resolve))
             .then(() => 'complete')
 
@@ -78,6 +74,8 @@ describe("Concurrency", () => {
 
         const promise1 = decoratedFn();
         const promise2 = decoratedFn();
+
+        await nextTick()
 
         // Check that only 1 task has started
         assert.strictEqual(resolvers.length, 1);
@@ -94,48 +92,51 @@ describe("Concurrency", () => {
         await promise2;
     })
 
+    it("Maintains processing count", {timeout: 1000}, async () => {
+        const fn = async () => {}
+        const decoratedFn = concurrency(fn, 1);
 
-    // Ensure that limit it being maintained correctly.
-    // TODO test that limit it maintained correctly when errors are thrown.
-    it("Maintains limit and processing count correctly", async () => {
-        const resolvers = [];
-        let autoResolve = true
-        const fn = (name) => new Promise(resolve => {
-            if (autoResolve) {
-                return resolve(name)
+        await decoratedFn();
+
+        // If the processing count did not decrement, then the second promise would hang indefinitely.
+        await decoratedFn();
+    })
+
+    it("Maintains processing count on error", {timeout: 1000}, async (t) => {
+        const fn = async (throwErr) => {
+            if (throwErr) {
+                throw new Error('Expected error');
             }
+        }
 
-            resolvers.push(resolve)
+        const decoratedFn = concurrency(fn, 1);
+
+        await assert.rejects(() => decoratedFn(true), {
+            message: 'Expected error',
         });
 
-        const decoratedFn = concurrency(fn, 2);
-        await Promise.all([
+        // If the processing count did not decrement on error, then this would hang indefinitely.
+        await decoratedFn(false);
+    })
+
+    it("Handles sync tasks", async () => {
+        const fn = (text) => text
+
+        const decoratedFn = concurrency(fn, 1);
+
+        const results = await Promise.all([
             decoratedFn('One'),
             decoratedFn('Two'),
-            decoratedFn('Three')
-        ])
+        ]);
 
-        autoResolve = false;
+        assert.deepStrictEqual(results, ['One', 'Two']);
+    })
 
-        decoratedFn('One')
-        decoratedFn('Two')
-        decoratedFn('Three')
-
-        assert.strictEqual(resolvers.length, 2);
-
-        resolvers[0]();
-
-        await immediate();
-        assert.strictEqual(resolvers.length, 3);
-
-        // Clean up
-        resolvers.forEach(resolve => resolve())
-    });
 
     // Impossible with current implementation due to using
     // async/await. Here just in case the implementation changes.
     it("Doesn't hit call stack limit", async () => {
-        const decoratedFn = concurrency(immediate, 2);
+        const decoratedFn = concurrency(nextTick, 2);
 
         const promises = [];
         for (let i = 0; i < 10_000; i++) {

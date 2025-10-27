@@ -10,14 +10,15 @@ export const concurrency = (fn, limit) => {
     }
 
     const run = async args => {
-        // TODO error handling
         processing++
-        const result = await fn(...args);
-        processing--
+        const result = await Promise.resolve()
+            .then(() => fn(...args))
+            .finally(() => processing--);
 
         if (queue.length > 0) {
             next()
         }
+
         return result;
     };
 
