@@ -4,7 +4,8 @@
   "description": "Zero dependency collection of composable asynchronous decorators.",
   "keywords": [
     "coalesce",
-    "coalescing",
+    "concurrency",
+    "limit",
     "deduplicate",
     "deduplication",
     "async",
