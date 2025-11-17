@@ -1,6 +1,7 @@
 # Deco
 [![Coverage Status](https://coveralls.io/repos/github/jacob-bennett/deco/badge.svg?branch=main)](https://coveralls.io/github/jacob-bennett/deco?branch=main)
 [![npm version](https://img.shields.io/npm/v/@jacben/deco.svg)](https://www.npmjs.com/package/@jacben/deco)
+[![dependencies](https://depx.co/api/badge/@jacben/deco)](https://depx.co/pkg/@jacben/deco)
 
 Zero dependency collection of composable asynchronous decorators.
 
