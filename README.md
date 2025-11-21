@@ -26,18 +26,18 @@ npm install @jacben/deco
 Deduplicate identical in-flight requests by combining them into one call.
 
 ```javascript
-import {coalesce} from "@jacben/deco";
+import { coalesce } from "@jacben/deco";
 
 // Example async function
-const getUserById = async (id) => {}
+const getUser = async (id) => {}
 
 // Wrap the original function so requests with the same values are coalesced
-const coalescedGetUserById = coalesce(getUserById);
+const coalescedGetUser = coalesce(getUser);
 
-// Only one call to getUserById occurs, even though it is called twice.
+// Only one call to getUser occurs, even though it is called twice.
 await Promise.all([
-    coalescedGetUserById(1),
-    coalescedGetUserById(1),
+    coalescedGetUser(1),
+    coalescedGetUser(1),
 ]); 
 ```
 
@@ -58,26 +58,26 @@ const coalescedGetPackage = coalesce(getPackage, generateKey);
 await coalescedGetPackage(pkg);
 ```
 > ⚠️ **Beware of collisions** when dealing with user input.  
-> For example, if your generateKey function is implemented as `(...args) => args.map(arg).join('|')`,  
+> For example, if your generateKey function is implemented as `(...args) => args.join('|')`,  
 > then `generateKey("a", "a")` would have the same output as `generateKey("a|a")`.
 
 ### Concurrency Limiting
 Limit how many requests can run concurrently.
 
 ```javascript
-import {limit} from "@jacben/deco";
+import { limit } from "@jacben/deco";
 
 // Example async function
-const getUserById = async (id) => {}
+const getUser = async (id) => {}
 
-// Allow a maximum of 2 concurrent requests to getUserById
-const limitedGetUserById = limit(getUserById, 2);
+// Allow a maximum of 2 concurrent requests to getUser
+const limitedGetUser = limit(getUser, 2);
 
 // The third request will not start until the first or second finishes
 await Promise.all([
-    limitedGetUserById(1),
-    limitedGetUserById(2),
-    limitedGetUserById(3),
+    limitedGetUser(1),
+    limitedGetUser(2),
+    limitedGetUser(3),
 ]);
 ```
 
@@ -85,7 +85,7 @@ await Promise.all([
 If you want to limit concurrent requests but allow identical requests to bypass this limit, you can combine decorators:
 
 ```javascript
-import {coalesce, limit} from '@jacben/deco'
+import { coalesce, limit } from "@jacben/deco"
 
 let fn = async () => {}
 fn = limit(fn, 5)
@@ -97,7 +97,7 @@ Any duplicate requests to coalesce do not hit to the next function in the chain.
 
 In reverse, if you want to limit calls and then dedupe identical request, you would decorate in the reverse order:
 ```javascript
-import {coalesce, limit} from '@jacben/deco'
+import { coalesce, limit } from "@jacben/deco"
 
 let fn = async () => {}
 fn = coalesce(fn)
