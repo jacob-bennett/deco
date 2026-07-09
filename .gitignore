@@ -1,4 +1,4 @@
 .idea/
 local/
 node_modules/
-types/
+dist/

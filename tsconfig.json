@@ -1,15 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "noImplicitAny": true,
-    "strictNullChecks": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2022"],
+    "erasableSyntaxOnly": true,
+    "strict": true,
     "allowJs": true,
     "checkJs": true,
     "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "./types"
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rewriteRelativeImportExtensions": true,
+    "types": []
   },
   "include": [
-    "./src/**/*.js"
-  ]
+    "./src/**/*.js",
+    "./src/**/*.ts",
+  ],
 }

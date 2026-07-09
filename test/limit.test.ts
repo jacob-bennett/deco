@@ -1,17 +1,21 @@
 import {it, describe} from "node:test"
 import assert from "node:assert/strict";
-import {limit} from "../src/limit.js";
+import {limit} from "../src/limit.ts";
 
 const nextTick = () => new Promise(resolve => process.nextTick(resolve));
 
+type Resolver = ((value?: unknown) => void);
+
 describe("Concurrency", () => {
     it("Runs tasks and returns results", async () => {
-        const fn = async (text) => {
+        type Fn = (text: string) => Promise<string>;
+
+        const fn: Fn = async (text: string) => {
             await nextTick();
             return text;
         }
 
-        const decoratedFn = limit(fn, 3);
+        const decoratedFn: Fn = limit(fn, 3);
 
         const results = await Promise.all([
             decoratedFn('One'),
@@ -25,7 +29,7 @@ describe("Concurrency", () => {
     })
 
     it("Runs tasks and returns results with limited concurrency", async () => {
-        const fn = async (text) => {
+        const fn = async (text: string) => {
             await nextTick();
             return text;
         }
@@ -46,8 +50,9 @@ describe("Concurrency", () => {
     })
 
     it("Reaches concurrency limit", async () => {
-        const resolvers = []
-        const fn = (text) => new Promise((resolve) => resolvers.push(resolve))
+        const resolvers: Resolver[] = []
+
+        const fn = (text: string) => new Promise((resolve) => resolvers.push(resolve))
             .then(() => text)
 
         const decoratedFn = limit(fn, 2);
@@ -66,7 +71,7 @@ describe("Concurrency", () => {
     })
 
     it("Does not exceed concurrency limit", async () => {
-        const resolvers = []
+        const resolvers: Resolver[] = []
         const fn = () => new Promise((resolve) => resolvers.push(resolve))
             .then(() => 'complete')
 
@@ -82,13 +87,14 @@ describe("Concurrency", () => {
 
         // Finish first task
         resolvers[0]();
-        await promise1;
+        await nextTick()
 
         // Now ensure that second has started
         assert.strictEqual(resolvers.length, 2);
 
         // Clean up
         resolvers[1]();
+        await promise1;
         await promise2;
     })
 
@@ -102,8 +108,8 @@ describe("Concurrency", () => {
         await decoratedFn();
     })
 
-    it("Maintains processing count on error", {timeout: 1000}, async () => {
-        const fn = async (throwErr) => {
+    it("Runs task after error on an empty queue", {timeout: 1000}, async () => {
+        const fn = async (throwErr: boolean) => {
             if (throwErr) {
                 throw new Error('Expected error');
             }
@@ -119,12 +125,55 @@ describe("Concurrency", () => {
         await decoratedFn(false);
     })
 
+    it("Runs task after an error at the front of the queue", {timeout: 1000}, async () => {
+        const fn = async (throwErr: boolean) => {
+            await nextTick();
+            if (throwErr) {
+                throw new Error('Expected error');
+            }
+        }
+
+        const decoratedFn = limit(fn, 1);
+
+        const fail = decoratedFn(true);
+        const success = decoratedFn(false)
+
+        await assert.rejects(fail, {
+            message: 'Expected error',
+        });
+
+        // If the processing count did not decrement on error, then this would hang indefinitely.
+        await success;
+    })
+
+    it("Rejects failed tasks that have been queued", {timeout: 1000}, async () => {
+        const fn = async (throwErr: boolean) => {
+            await nextTick();
+            if (throwErr) {
+                throw new Error('Expected error');
+            }
+
+            return true
+        }
+
+        const decoratedFn = limit(fn, 1);
+
+        const success = decoratedFn(false)
+        const fail = decoratedFn(true);
+
+        assert.strictEqual(await success, true)
+
+        await assert.rejects(fail, {
+            message: 'Expected error',
+        });
+    })
+
     // While it wouldn't make sense to limit synchronous functions, it is
     // possible that the decorated function returns promises conditionally.
     it("Handles sync tasks", async () => {
-        const fn = (text) => text
+        const fn: (text: string) => string = (text: string) => text
 
-        const decoratedFn = limit(fn, 1);
+        const decoratedFn: (text: string) => Promise<string> = limit(fn, 1);
 
         const results = await Promise.all([
             decoratedFn('One'),
@@ -134,17 +183,28 @@ describe("Concurrency", () => {
         assert.deepStrictEqual(results, ['One', 'Two']);
     })
 
+    it("Sync tasks return promises", async () => {
+        const fn = (text: string) => text
+
+        const decoratedFn = limit(fn, 1);
+        const res: Promise<string> = decoratedFn('')
+
+        assert.strictEqual(res instanceof Object, true)
+        await res;
+    })
+
     it("Validates parameters", async () => {
+        // @ts-expect-error
         assert.throws(() => limit('str', 1), {
             name: "TypeError",
             message: 'parameter must be a function',
         });
 
+        // @ts-expect-error
         assert.throws(() => limit(() => {}, 'str'), {
             name: "TypeError",
             message: 'limit must be a number',
         });
-
 
         assert.throws(() => limit(() => {}, -1), {
             name: "TypeError",

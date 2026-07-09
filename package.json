@@ -20,24 +20,33 @@
     "url": "git+https://github.com/jacob-bennett/deco.git"
   },
   "files": [
+    "dist/",
     "src/",
-    "README.md",
-    "types/"
+    "README.md"
   ],
   "license": "MIT",
   "author": "Jacob Bennett <jacob@jacobbennett.tech>",
+  "exports": {
+    ".": {
+      "types": "./dist/deco.d.ts",
+      "default": "./dist/deco.js"
+    }
+  },
   "type": "module",
-  "main": "src/deco.js",
+  "main": "dist/deco.js",
+  "sideEffects": false,
   "directories": {
     "test": "test"
   },
-  "types": "types/deco.d.ts",
+  "types": "dist/deco.d.ts",
   "scripts": {
-    "test": "node --test test/*",
-    "test:cov": "node --test --experimental-test-coverage",
-    "types": "npx tsc"
+    "test": "npm run typecheck && node --test test/*",
+    "test:cov": "node --test --experimental-test-coverage test/*",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
   },
   "devDependencies": {
+    "@types/node": "25.2.3",
     "typescript": "5.9.3"
   }
 }
