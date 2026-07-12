@@ -1,6 +1,6 @@
 import {it, describe} from "node:test"
 import assert from "node:assert/strict";
-import {limit} from "../src/limit.ts";
+import {limit} from "../src/deco.ts";
 
 const nextTick = () => new Promise(resolve => process.nextTick(resolve));
 
