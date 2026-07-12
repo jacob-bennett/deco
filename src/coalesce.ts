@@ -44,7 +44,7 @@ const createKey = (...args: unknown[]): string => {
 
 const sanitiseArgs = (args: ValidDefaultArgs[]): string[] => args.map(key => wrap(prependType(key)));
 
-const wrap = (arg: string): string => `{${arg}}`
+const wrap = (arg: string): string => `{${arg}|${arg.length}}`
 
 const prependType = (value: ValidDefaultArgs): string => {
     switch (typeof value) {

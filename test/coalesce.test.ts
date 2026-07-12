@@ -108,7 +108,7 @@ describe("Coalescer", () => {
 
         it("Prevents key collisions", async () => {
             let timesCalled = 0
-            const fn = async (..._1: string[]) => timesCalled++;
+            const fn = async (..._1: (string|number|boolean)[]) => timesCalled++;
 
             const decoratedFn = coalesce(fn);
 
@@ -116,29 +116,32 @@ describe("Coalescer", () => {
                 decoratedFn('||', '|'),
                 decoratedFn('|', '||'),
 
-                decoratedFn('|||', '||'),
-                decoratedFn('||', '||'),
-
                 decoratedFn('|', ''),
                 decoratedFn('', '|'),
 
                 decoratedFn('a|b', 'c'),
                 decoratedFn('a', 'b|c'),
 
-                decoratedFn('', 'a'),
-                decoratedFn('s', 'a'),
-
                 decoratedFn('s', ''),
                 decoratedFn('s}|{s'),
 
-                decoratedFn('', 'one'),
-                decoratedFn('one', ''),
-
                 decoratedFn('one','two'),
-                decoratedFn('one}|{stwo'),
+                decoratedFn('one|4}|{stwo|4'),
+
+                decoratedFn('x', 'y}|{sz'),
+                decoratedFn('x}|{sy', 'z'),
+
+                decoratedFn(1),
+                decoratedFn('1'),
+
+                decoratedFn(true),
+                decoratedFn('true'),
+
+                decoratedFn('1', true),
+                decoratedFn('1|2}|{btrue|5}'),
             ]);
 
-            assert.strictEqual(timesCalled, 16)
+            assert.strictEqual(timesCalled, 18)
         })
 
         it("Coalesces calls with no parameters", async (t) => {
