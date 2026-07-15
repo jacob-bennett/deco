@@ -16,6 +16,8 @@ jobs:
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
+      - name: Run checks
+        run: npm run check
       - name: Run tests with coverage
         run: node --test --experimental-test-coverage --test-reporter=lcov > coverage-lcov.info
       - name: Upload coverage to Coveralls

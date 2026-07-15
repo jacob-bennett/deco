@@ -43,10 +43,23 @@
     "test": "npm run typecheck && node --test test/*",
     "test:cov": "node --test --experimental-test-coverage test/*",
     "build": "tsc",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
+    "fix": "npm run lint && npm run format && npm run typecheck && echo '> Running tests...' && node --test --test-reporter=dot ./test/**/*",
+    "check": "npm run lint:check && npm run format:check && npm run typecheck && echo '> Running tests...' && npm run test --test-reporter=dot ./test/**/* && echo '> Tests passed!'",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config . --fix",
+    "lint:check": "eslint --flag unstable_native_nodejs_ts_config .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/node": "25.2.3",
-    "typescript": "5.9.3"
+    "eslint": "10.7.0",
+    "eslint-config-prettier": "10.1.8",
+    "husky": "9.1.7",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.62.1"
   }
 }

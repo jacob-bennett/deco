@@ -104,5 +104,10 @@ fn = coalesce(fn)
 fn = limit(fn, 5)
 ```
 
+## Contributing
+### Local setup 
+
+Because `ignore-scripts` is enabled in the project's `.npmrc`, you'll need to run `npm run prepare` manually to enable Husky pre-commit hooks.
+
 ## Contact
 If you'd like to suggest a feature, report an issue or ask a question, feel free to [raise an issue](https://github.com/jacob-bennett/deco/issues/new).
