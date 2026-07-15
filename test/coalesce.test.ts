@@ -304,21 +304,21 @@ describe("Coalescer", () => {
 
     it("Type error if fn & genKey signatures do not match", async () => {
       coalesce(
-          (_1: string) => "res",
-          // @ts-expect-error
-          (_1: string, _2: string): string => "",
+        (_1: string) => "res",
+        // @ts-expect-error
+        (_1: string, _2: string): string => "",
       );
 
       coalesce(
-          (_1: string) => "res",
-          // @ts-expect-error
-          (_1: number): string => "",
+        (_1: string) => "res",
+        // @ts-expect-error
+        (_1: number): string => "",
       );
 
       coalesce(
-          (_1: string) => 1,
-          // @ts-expect-error
-          (_1: number): string => "",
+        (_1: string) => 1,
+        // @ts-expect-error
+        (_1: number): string => "",
       );
     });
   });

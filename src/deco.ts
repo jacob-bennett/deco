@@ -1,7 +1,4 @@
-import {coalesce} from "./coalesce.ts";
-import {limit} from "./limit.ts";
+import { coalesce } from "./coalesce.ts";
+import { limit } from "./limit.ts";
 
-export {
-    coalesce,
-    limit,
-}
+export { coalesce, limit };
