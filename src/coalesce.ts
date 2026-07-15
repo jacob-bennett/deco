@@ -1,13 +1,12 @@
 type ValidDefaultArgs = string | number | boolean;
 
-type Fn<Args extends any[], Return> = (...args: Args) => Promise<Return> | Return;
-type KeyGenerator<Args extends any[]> = (...args: Args) => string;
-type DecoratedFn<Args extends any[], Return> = (...args: Args) => Promise<Return>;
+type Fn<Args extends unknown[], Return> = (...args: Args) => Promise<Return> | Return;
+type KeyGenerator<Args extends unknown[]> = (...args: Args) => string;
+type DecoratedFn<Args extends unknown[], Return> = (...args: Args) => Promise<Return>;
 
 export function coalesce <Args extends ValidDefaultArgs[], Return>(fn: Fn<Args, Return>): DecoratedFn<Args, Return>;
-export function coalesce <Args extends any[], Return>(fn: Fn<Args, Return>, generateKey: KeyGenerator<Args>): DecoratedFn<Args, Return>;
-export function coalesce <Args extends any[], Return>(fn: Fn<Args, Return>, generateKey?: KeyGenerator<Args>): DecoratedFn<Args, Return> {
-
+export function coalesce <Args extends unknown[], Return>(fn: Fn<Args, Return>, generateKey: KeyGenerator<Args>): DecoratedFn<Args, Return>;
+export function coalesce <Args extends unknown[], Return>(fn: Fn<Args, Return>, generateKey?: KeyGenerator<Args>): DecoratedFn<Args, Return> {
     const inFlightRequests: Map<string, Promise<Return>> = new Map();
 
     return async (...args: Args): Promise<Return> => {

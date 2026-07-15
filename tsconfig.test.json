@@ -4,7 +4,6 @@
     "types": ["node"]
   },
   "include": [
-    "./test/**/*.js",
     "./test/**/*.ts",
   ],
 }
