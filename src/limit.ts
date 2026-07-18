@@ -1,3 +1,5 @@
+import { Queue } from "./Queue.ts";
+
 export const limit = <Args extends unknown[], Return>(
   fn: (...args: Args) => Return | Promise<Return>,
   limit: number,
@@ -6,14 +8,14 @@ export const limit = <Args extends unknown[], Return>(
 
   let processing = 0;
 
-  const queue: {
+  const queue = new Queue<{
     args: Args;
     resolve: (result: Return) => void;
     reject: (error: unknown) => void;
-  }[] = [];
+  }>();
 
   const next = () => {
-    const { args, resolve, reject } = queue.shift()!;
+    const { args, resolve, reject } = queue.dequeue();
     run(args).then(resolve, reject);
   };
 
@@ -36,7 +38,7 @@ export const limit = <Args extends unknown[], Return>(
     }
 
     return new Promise((resolve, reject) =>
-      queue.push({ args, resolve, reject }),
+      queue.enqueue({ args, resolve, reject }),
     );
   };
 };
