@@ -5,14 +5,14 @@
     "moduleResolution": "nodenext",
     "lib": ["ES2022"],
     "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
     "strict": true,
-    "allowJs": true,
-    "checkJs": true,
     "declaration": true,
     "declarationMap": true,
+    "sourceMap": true,
     "outDir": "./dist",
     "rewriteRelativeImportExtensions": true,
     "types": []
   },
-  "include": ["./src/**/*.js", "./src/**/*.ts"]
+  "include": ["./src/**/*.ts"]
 }
