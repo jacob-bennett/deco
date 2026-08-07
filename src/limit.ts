@@ -1,9 +1,10 @@
 import { Queue } from "./Queue.ts";
+import type { Fn, DecoratedFn } from "./types.ts";
 
 export const limit = <Args extends unknown[], Return>(
-  fn: (...args: Args) => Return | Promise<Return>,
+  fn: Fn<Args, Return>,
   limit: number,
-): ((...args: Args) => Promise<Return>) => {
+): DecoratedFn<Args, Return> => {
   validateArgs(fn, limit);
 
   let processing = 0;
