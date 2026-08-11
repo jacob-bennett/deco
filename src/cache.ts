@@ -1,16 +1,18 @@
-import type { DecoratedFn, Fn } from "./types.ts";
+import type { DecoratedFn, Fn, ValidDefaultArgs } from "./types.ts";
 import { createKey } from "./createKey.ts";
 
-export const cache = <Args extends unknown[], Return>(
+type Options = {
+  ttl: number;
+  maxSize: number;
+};
+
+export const cache = <Args extends ValidDefaultArgs[], Return>(
   fn: Fn<Args, Return>,
-  options: {
-    ttl: number;
-    maxSize: number;
-  },
+  options: Options,
 ): DecoratedFn<Args, Return> => {
+  validateArgs(fn, options);
+
   const store = new Map<string, { value: Return; expiresAt: number }>();
-  // TODO validate options
-  // TODO validate maxSize > 0
   const { ttl, maxSize } = options;
 
   return async (...args: Args): Promise<Return> => {
@@ -40,4 +42,34 @@ export const cache = <Args extends unknown[], Return>(
 
     return value;
   };
+};
+
+const validateArgs = (fn: unknown, options: Options) => {
+  if (typeof fn !== "function") {
+    throw new TypeError("parameter must be a function");
+  }
+
+  if (!options) {
+    throw new TypeError("options are required");
+  }
+
+  validatePositiveNumber(options.ttl, "options.ttl");
+  validatePositiveNumber(options.maxSize, "options.maxSize");
+};
+
+const validatePositiveNumber: (
+  val: number,
+  name: string,
+) => asserts val is number = (val, field) => {
+  if (val === undefined) {
+    throw new TypeError(`${field} is required`);
+  }
+
+  if (typeof val !== "number") {
+    throw new TypeError(`${field} must be a number`);
+  }
+
+  if (val < 1) {
+    throw new TypeError(`${field} must be > 0`);
+  }
 };

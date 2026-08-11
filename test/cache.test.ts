@@ -332,7 +332,7 @@ describe("Cache", () => {
       assert.strictEqual(await decorated("param"), "success");
     });
 
-    it("Throws errors for invalid parameter types", async () => {
+    it("Throws for invalid fn parameters", async () => {
       const multiply = async (first: string, second: number) =>
         Number.parseInt(first) * second;
 
@@ -350,6 +350,64 @@ describe("Cache", () => {
         name: "KeyGenerationError",
         message:
           "Unable to generate key from parameters. Invalid parameter type: object.",
+      });
+    });
+
+    it("Throws for invalid fn parameter", () => {
+      // @ts-expect-error
+      assert.throws(() => cache(), {
+        name: "TypeError",
+        message: "parameter must be a function",
+      });
+
+      // @ts-expect-error
+      assert.throws(() => cache("stub", defaultOpts), {
+        name: "TypeError",
+        message: "parameter must be a function",
+      });
+    });
+
+    it("Throws for invalid options", () => {
+      const stub = async (param: string) => param;
+
+      // @ts-expect-error
+      assert.throws(() => cache(stub), {
+        name: "TypeError",
+        message: "options are required",
+      });
+
+      // @ts-expect-error
+      assert.throws(() => cache(stub, { maxSize: 10 }), {
+        name: "TypeError",
+        message: "options.ttl is required",
+      });
+
+      // @ts-expect-error
+      assert.throws(() => cache(stub, { ttl: 1000 }), {
+        name: "TypeError",
+        message: "options.maxSize is required",
+      });
+
+      // @ts-expect-error
+      assert.throws(() => cache(stub, { ttl: "1000", maxSize: 10 }), {
+        name: "TypeError",
+        message: "options.ttl must be a number",
+      });
+
+      assert.throws(() => cache(stub, { ttl: 0, maxSize: 10 }), {
+        name: "TypeError",
+        message: "options.ttl must be > 0",
+      });
+
+      // @ts-expect-error
+      assert.throws(() => cache(stub, { ttl: 1000, maxSize: "10" }), {
+        name: "TypeError",
+        message: "options.maxSize must be a number",
+      });
+
+      assert.throws(() => cache(stub, { ttl: 1000, maxSize: 0 }), {
+        name: "TypeError",
+        message: "options.maxSize must be > 0",
       });
     });
   });
