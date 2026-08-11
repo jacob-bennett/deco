@@ -3,19 +3,32 @@ import { createKey } from "./createKey.ts";
 
 export const cache = <Args extends unknown[], Return>(
   fn: Fn<Args, Return>,
+  options: {
+    ttl: number;
+  },
 ): DecoratedFn<Args, Return> => {
-  const store = new Map<string, Return>();
+  const store = new Map<string, { value: Return; expiresAt: number }>();
+
+  // TODO validate options
+
+  const { ttl } = options;
 
   return async (...args: Args): Promise<Return> => {
     const key = createKey(...args);
 
     if (store.has(key)) {
-      return store.get(key)!;
+      const { value, expiresAt } = store.get(key)!;
+      if (expiresAt > Date.now()) {
+        return value;
+      }
+
+      store.delete(key);
     }
 
-    const res = await fn(...args);
+    const value = await fn(...args);
+    const expiresAt = Date.now() + ttl;
+    store.set(key, { value, expiresAt });
 
-    store.set(key, res);
-    return res;
+    return value;
   };
 };

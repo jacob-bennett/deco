@@ -2,6 +2,9 @@ import { describe, it } from "node:test";
 import { cache } from "../src/deco.ts";
 import assert from "node:assert/strict";
 
+const defaultOpts = {
+  ttl: 1000,
+};
 describe("Cache", () => {
   it("Caches single parameter function", async () => {
     let called = 0;
@@ -10,7 +13,7 @@ describe("Cache", () => {
       return param;
     };
 
-    const decorated: typeof stub = cache(stub);
+    const decorated: typeof stub = cache(stub, defaultOpts);
 
     const res1: Awaited<ReturnType<typeof stub>> = await decorated("hello");
     const res2 = await decorated("hello");
@@ -22,6 +25,31 @@ describe("Cache", () => {
     assert.strictEqual(res3, "world");
   });
 
+  it("Expires cached items after TTL is exceeded", async (context) => {
+    let called = 0;
+    const stub = async (param: string) => {
+      called++;
+      return `${param}-${called}`;
+    };
+
+    context.mock.timers.enable();
+    const decorated: typeof stub = cache(stub, { ttl: 1000 });
+
+    assert.strictEqual(await decorated("test"), `test-${1}`);
+    assert.strictEqual(called, 1);
+
+    context.mock.timers.tick(999);
+    assert.strictEqual(await decorated("test"), `test-${1}`);
+    assert.strictEqual(called, 1);
+
+    context.mock.timers.tick(1);
+    assert.strictEqual(await decorated("test"), `test-${2}`);
+    assert.strictEqual(called, 2);
+
+    assert.strictEqual(await decorated("test"), `test-${2}`);
+    assert.strictEqual(called, 2);
+  });
+
   it("Caches multiple param function", async () => {
     type Multiply = (first: string, second: number) => Promise<number>;
     let called = 0;
@@ -30,7 +58,7 @@ describe("Cache", () => {
       return Number.parseInt(first) * second;
     };
 
-    const decorated: Multiply = cache(multiply);
+    const decorated: Multiply = cache(multiply, defaultOpts);
 
     const res1: Awaited<ReturnType<Multiply>> = await decorated("5", 5);
     const res2: Awaited<ReturnType<Multiply>> = await decorated("5", 5);
@@ -49,7 +77,7 @@ describe("Cache", () => {
       return param;
     };
 
-    const decorated = cache(fn);
+    const decorated = cache(fn, defaultOpts);
 
     const promise: Promise<ReturnType<typeof fn>> = decorated("hello");
     assert.strictEqual(promise instanceof Promise, true);
@@ -70,7 +98,7 @@ describe("Cache", () => {
       return 0;
     };
 
-    const decorated: typeof stub = cache(stub);
+    const decorated: typeof stub = cache(stub, defaultOpts);
 
     assert.strictEqual(await decorated("hello"), 0);
     assert.strictEqual(await decorated("hello"), 0);
@@ -84,7 +112,7 @@ describe("Cache", () => {
       return undefined;
     };
 
-    const decorated: typeof stub = cache(stub);
+    const decorated: typeof stub = cache(stub, defaultOpts);
 
     assert.strictEqual(await decorated("hello"), undefined);
     assert.strictEqual(await decorated("hello"), undefined);
@@ -101,7 +129,7 @@ describe("Cache", () => {
       return "success";
     };
 
-    const decorated: typeof fn = cache(fn);
+    const decorated: typeof fn = cache(fn, defaultOpts);
 
     await assert.rejects(() => decorated("param"), {
       name: "Error",
@@ -119,7 +147,7 @@ describe("Cache", () => {
       return "result";
     };
 
-    const decorated: typeof fn = cache(fn);
+    const decorated: typeof fn = cache(fn, defaultOpts);
 
     assert.strictEqual(await decorated(), "result");
     assert.strictEqual(await decorated(), "result");
@@ -133,7 +161,7 @@ describe("Cache", () => {
       return "result";
     };
 
-    const decorated = cache(fn);
+    const decorated = cache(fn, defaultOpts);
 
     const results = await Promise.all([decorated("hello"), decorated("hello")]);
 
@@ -144,7 +172,7 @@ describe("Cache", () => {
   it("Returns the same reference on cache hit", async () => {
     const fn = async (_: string) => ({ value: "result" });
 
-    const decorated = cache(fn);
+    const decorated = cache(fn, defaultOpts);
 
     const res1 = await decorated("hello");
     const res2 = await decorated("hello");
@@ -156,7 +184,7 @@ describe("Cache", () => {
     const multiply = async (first: string, second: number) =>
       Number.parseInt(first) * second;
 
-    const decorated = cache(multiply);
+    const decorated = cache(multiply, defaultOpts);
 
     // @ts-expect-error invalid parameter type
     await assert.rejects(() => decorated({ value: "one" }, 1), {
@@ -177,7 +205,7 @@ describe("Cache", () => {
     const multiply = async (first: string, second: number) =>
       Number.parseInt(first) * second;
 
-    const decorated = cache(multiply);
+    const decorated = cache(multiply, defaultOpts);
 
     // @ts-expect-error missing parameter
     await decorated("one");
