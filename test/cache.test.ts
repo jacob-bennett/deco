@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 
 const defaultOpts = {
   ttl: 1000,
+  maxSize: 10,
 };
+
 describe("Cache", () => {
   it("Caches single parameter function", async () => {
     let called = 0;
@@ -25,31 +27,6 @@ describe("Cache", () => {
     assert.strictEqual(res3, "world");
   });
 
-  it("Expires cached items after TTL is exceeded", async (context) => {
-    let called = 0;
-    const stub = async (param: string) => {
-      called++;
-      return `${param}-${called}`;
-    };
-
-    context.mock.timers.enable();
-    const decorated: typeof stub = cache(stub, { ttl: 1000 });
-
-    assert.strictEqual(await decorated("test"), `test-${1}`);
-    assert.strictEqual(called, 1);
-
-    context.mock.timers.tick(999);
-    assert.strictEqual(await decorated("test"), `test-${1}`);
-    assert.strictEqual(called, 1);
-
-    context.mock.timers.tick(1);
-    assert.strictEqual(await decorated("test"), `test-${2}`);
-    assert.strictEqual(called, 2);
-
-    assert.strictEqual(await decorated("test"), `test-${2}`);
-    assert.strictEqual(called, 2);
-  });
-
   it("Caches multiple param function", async () => {
     type Multiply = (first: string, second: number) => Promise<number>;
     let called = 0;
@@ -68,6 +45,174 @@ describe("Cache", () => {
     assert.strictEqual(res1, 25);
     assert.strictEqual(res2, 25);
     assert.strictEqual(res3, 50);
+  });
+
+  it("Caches zero param function", async () => {
+    let called = 0;
+    const fn = async () => {
+      called++;
+      return "result";
+    };
+
+    const decorated: typeof fn = cache(fn, defaultOpts);
+
+    assert.strictEqual(await decorated(), "result");
+    assert.strictEqual(await decorated(), "result");
+    assert.strictEqual(called, 1);
+  });
+
+  it("Expires cached items after TTL is exceeded", async (context) => {
+    let called = 0;
+    const stub = async (param: string) => {
+      called++;
+      return `${param}-${called}`;
+    };
+
+    context.mock.timers.enable({ apis: ["Date"] });
+    const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 10 });
+
+    assert.strictEqual(await decorated("test"), `test-${1}`);
+    assert.strictEqual(called, 1);
+
+    context.mock.timers.tick(999);
+    assert.strictEqual(await decorated("test"), `test-${1}`);
+    assert.strictEqual(called, 1);
+
+    context.mock.timers.tick(1);
+    assert.strictEqual(await decorated("test"), `test-${2}`);
+    assert.strictEqual(called, 2);
+
+    assert.strictEqual(await decorated("test"), `test-${2}`);
+    assert.strictEqual(called, 2);
+  });
+
+  it("Evicts by insertion order", async () => {
+    let called = 0;
+    const stub = async (param: string) => {
+      called++;
+      return param;
+    };
+
+    const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 2 });
+
+    await decorated("one");
+    await decorated("two");
+    await decorated("three");
+    assert.strictEqual(called, 3);
+
+    await decorated("two");
+    await decorated("three");
+    assert.strictEqual(called, 3);
+
+    await decorated("one");
+    assert.strictEqual(called, 4);
+
+    await decorated("two");
+    assert.strictEqual(called, 5);
+    assert.strictEqual(await decorated("two"), "two");
+  });
+
+  it("Evicts by least recently used", async () => {
+    let called = 0;
+    const stub = async (_: string) => called++;
+
+    const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 3 });
+
+    await decorated("one");
+    await decorated("two");
+    await decorated("three");
+    assert.strictEqual(called, 3);
+
+    await decorated("one");
+    assert.strictEqual(called, 3);
+
+    await decorated("four");
+    await decorated("five");
+    assert.strictEqual(called, 5);
+
+    await decorated("one");
+    assert.strictEqual(called, 5);
+
+    await decorated("two");
+    await decorated("three");
+    assert.strictEqual(called, 7);
+
+    await decorated("four");
+    await decorated("five");
+    assert.strictEqual(called, 9);
+  });
+
+  it("Removes least recently used cached items that have expired", async (context) => {
+    let called = 0;
+    const stub = async (param: string) => {
+      called++;
+      return param;
+    };
+
+    context.mock.timers.enable({ apis: ["Date"] });
+    const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 2 });
+
+    await decorated("one");
+    await decorated("two");
+
+    context.mock.timers.tick(1000);
+    assert.strictEqual(await decorated("one"), "one");
+    assert.strictEqual(await decorated("two"), "two");
+    assert.strictEqual(called, 4);
+
+    assert.strictEqual(await decorated("three"), "three");
+    assert.strictEqual(called, 5);
+
+    assert.strictEqual(await decorated("two"), "two");
+    assert.strictEqual(called, 5);
+
+    assert.strictEqual(await decorated("one"), "one");
+    assert.strictEqual(called, 6);
+
+    assert.strictEqual(await decorated("two"), "two");
+    assert.strictEqual(called, 6);
+
+    assert.strictEqual(await decorated("three"), "three");
+    assert.strictEqual(called, 7);
+  });
+
+  it("Doesn't exceed maxSize when calls are concurrent", async () => {
+    let called = 0;
+    const stub = async (_: string) => called++;
+
+    const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 2 });
+
+    await Promise.all([decorated("one"), decorated("two"), decorated("three")]);
+    assert.strictEqual(called, 3);
+
+    await Promise.all([decorated("one"), decorated("two"), decorated("three")]);
+    assert.strictEqual(called, 4);
+  });
+
+  it("Doesn't evict when the decorated function errors", async () => {
+    let called = 0;
+    const stub = async (param: string) => {
+      called++;
+      if (param === "fail") {
+        throw new Error("TestError");
+      }
+
+      return param;
+    };
+
+    const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 1 });
+
+    assert.strictEqual(await decorated("one"), "one");
+    assert.strictEqual(called, 1);
+
+    await assert.rejects(() => decorated("fail"), {
+      name: "Error",
+      message: "TestError",
+    });
+    assert.strictEqual(called, 2);
+
+    assert.strictEqual(await decorated("one"), "one");
+    assert.strictEqual(called, 2);
   });
 
   it("Promisifies synchronous functions", async () => {
@@ -130,7 +275,6 @@ describe("Cache", () => {
     };
 
     const decorated: typeof fn = cache(fn, defaultOpts);
-
     await assert.rejects(() => decorated("param"), {
       name: "Error",
       message: "TestError",
@@ -138,20 +282,6 @@ describe("Cache", () => {
 
     throwError = false;
     assert.strictEqual(await decorated("param"), "success");
-  });
-
-  it("Caches calls with no parameters", async () => {
-    let called = 0;
-    const fn = async () => {
-      called++;
-      return "result";
-    };
-
-    const decorated: typeof fn = cache(fn, defaultOpts);
-
-    assert.strictEqual(await decorated(), "result");
-    assert.strictEqual(await decorated(), "result");
-    assert.strictEqual(called, 1);
   });
 
   it("Doesn't deduplicate concurrent calls", async () => {
