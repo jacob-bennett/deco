@@ -155,7 +155,7 @@ describe("Coalescer", () => {
       const number = 9007199254740992;
 
       await assert.rejects(() => decoratedFn(number), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
           "Unable to generate key: Provided integer exceeds maximum safe integer size",
       });
@@ -182,44 +182,46 @@ describe("Coalescer", () => {
 
       // @ts-expect-error
       await assert.rejects(() => decoratedFn({ key: "value" }), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
-          "Invalid parameter type: object.\nCreate a generateKey callback to use complex data types.",
+          "Unable to generate key from parameters. Invalid parameter type: object.",
       });
 
       // @ts-expect-error
       await assert.rejects(() => decoratedFn(null), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
-          "Invalid parameter type: object.\nCreate a generateKey callback to use complex data types.",
+          // TODO "Null" instead of object
+          "Unable to generate key from parameters. Invalid parameter type: object.",
       });
 
       // @ts-expect-error
       await assert.rejects(() => decoratedFn(() => {}), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
-          "Invalid parameter type: function.\nCreate a generateKey callback to use complex data types.",
+          "Unable to generate key from parameters. Invalid parameter type: function.",
       });
 
       // @ts-expect-error
       await assert.rejects(() => decoratedFn([]), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
-          "Invalid parameter type: object.\nCreate a generateKey callback to use complex data types.",
+          // TODO "array" instead of object.
+          "Unable to generate key from parameters. Invalid parameter type: object.",
       });
 
       // @ts-expect-error
       await assert.rejects(() => decoratedFn(Symbol()), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
-          "Invalid parameter type: symbol.\nCreate a generateKey callback to use complex data types.",
+          "Unable to generate key from parameters. Invalid parameter type: symbol.",
       });
 
       // @ts-expect-error
       await assert.rejects(() => decoratedFn(100n), {
-        name: "CoalesceKeyError",
+        name: "KeyGenerationError",
         message:
-          "Invalid parameter type: bigint.\nCreate a generateKey callback to use complex data types.",
+          "Unable to generate key from parameters. Invalid parameter type: bigint.",
       });
     });
 

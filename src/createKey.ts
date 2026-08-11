@@ -38,8 +38,8 @@ const validateArgs: (args: unknown[]) => asserts args is ValidDefaultArgs[] = (
       typeof arg !== "number" &&
       typeof arg !== "boolean"
     ) {
-      throw new CoalesceKeyError(
-        `Invalid parameter type: ${typeof arg}.\nCreate a generateKey callback to use complex data types.`,
+      throw new KeyGenerationError(
+        `Unable to generate key from parameters. Invalid parameter type: ${typeof arg}.`,
       );
     }
 
@@ -47,16 +47,16 @@ const validateArgs: (args: unknown[]) => asserts args is ValidDefaultArgs[] = (
     // Numbers larger than Number.MAX_SAFE_INTEGER may be rounded, which could
     // cause accidental key collisions when forming keys.
     if (typeof arg === "number" && !Number.isSafeInteger(arg)) {
-      throw new CoalesceKeyError(
+      throw new KeyGenerationError(
         `Unable to generate key: Provided integer exceeds maximum safe integer size`,
       );
     }
   });
 };
 
-class CoalesceKeyError extends Error {
+class KeyGenerationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "CoalesceKeyError";
+    this.name = "KeyGenerationError";
   }
 }
