@@ -351,6 +351,13 @@ describe("Cache", () => {
         message:
           "Unable to generate key from parameters. Invalid parameter type: object.",
       });
+
+      // @ts-expect-error invalid parameter type
+      await assert.rejects(() => decorated("one", null), {
+        name: "KeyGenerationError",
+        message:
+          "Unable to generate key from parameters. Invalid parameter type: object.",
+      });
     });
 
     it("Throws for invalid fn parameter", () => {

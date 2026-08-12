@@ -22,7 +22,7 @@ describe("Coalescer", () => {
       assert.deepStrictEqual(results, ["done", "done"]);
     });
 
-    it("Doesn't coalesce when first request has already complete", async () => {
+    it("Doesn't coalesce second request when first has already completed", async () => {
       let timesCalled = 0;
       const fn = async (_: string) => timesCalled++;
 
@@ -55,6 +55,7 @@ describe("Coalescer", () => {
         decoratedFn("stubValue", 1),
         decoratedFn("stubValue", 1),
         decoratedFn("stubValue", 2),
+        decoratedFn("stubValue", 2),
       ]);
 
       assert.strictEqual(timesCalled, 2);
@@ -70,100 +71,15 @@ describe("Coalescer", () => {
         decoratedFn("stubValue", true),
         decoratedFn("stubValue", true),
         decoratedFn("stubValue", false),
+        decoratedFn("stubValue", false),
       ]);
 
       assert.strictEqual(timesCalled, 2);
-    });
-
-    it("Distinguishes between different data types - strings and booleans", async () => {
-      let timesCalled = 0;
-      const fn = async (_: string | boolean) => timesCalled++;
-
-      const decoratedFn = coalesce(fn);
-
-      await Promise.all([decoratedFn(true), decoratedFn("true")]);
-
-      assert.strictEqual(timesCalled, 2);
-    });
-
-    it("Distinguishes between different data types - strings and integers", async () => {
-      let timesCalled = 0;
-      const fn = async (_: string | number) => timesCalled++;
-
-      const decoratedFn = coalesce(fn);
-
-      await Promise.all([decoratedFn(1), decoratedFn("1")]);
-
-      assert.strictEqual(timesCalled, 2);
-    });
-
-    it("Prevents key collisions", async () => {
-      let timesCalled = 0;
-      const fn = async (..._1: (string | number | boolean)[]) => timesCalled++;
-
-      const decoratedFn = coalesce(fn);
-
-      await Promise.all([
-        decoratedFn("||", "|"),
-        decoratedFn("|", "||"),
-
-        decoratedFn("|", ""),
-        decoratedFn("", "|"),
-
-        decoratedFn("a|b", "c"),
-        decoratedFn("a", "b|c"),
-
-        decoratedFn("s", ""),
-        decoratedFn("s}|{s"),
-
-        decoratedFn("one", "two"),
-        decoratedFn("one|4}|{stwo|4"),
-
-        decoratedFn("x", "y}|{sz"),
-        decoratedFn("x}|{sy", "z"),
-
-        decoratedFn(1),
-        decoratedFn("1"),
-
-        decoratedFn(true),
-        decoratedFn("true"),
-
-        decoratedFn("1", true),
-        decoratedFn("1|2}|{btrue|5}"),
-      ]);
-
-      assert.strictEqual(timesCalled, 18);
-    });
-
-    it("Coalesces calls with no parameters", async () => {
-      let timesCalled = 0;
-      const fn = async () => timesCalled++;
-
-      const decoratedFn = coalesce(fn);
-
-      await Promise.all([decoratedFn(), decoratedFn()]);
-
-      await decoratedFn();
-
-      assert.strictEqual(timesCalled, 2);
-    });
-
-    it("Throws error if an unsafe number is provided", async () => {
-      const decoratedFn = coalesce((_: number) => {});
-
-      // Exceeds Number.MAX_SAFE_INTEGER
-      const number = 9007199254740992;
-
-      await assert.rejects(() => decoratedFn(number), {
-        name: "KeyGenerationError",
-        message:
-          "Unable to generate key: Provided integer exceeds maximum safe integer size",
-      });
     });
 
     // While it wouldn't make sense to coalesce synchronous functions, it is
     // possible that the decorated function returns promises conditionally.
-    it("Supports sync functions", async () => {
+    it("Supports synchronous functions", async () => {
       let timesCalled = 0;
       const fn = () => timesCalled++;
 
@@ -176,56 +92,7 @@ describe("Coalescer", () => {
       assert.strictEqual(timesCalled, 1);
     });
 
-    it("Throws error if non-supported data types are provided", async () => {
-      // @ts-expect-error invalid args (object) and generateKey is not provided
-      const decoratedFn = coalesce((_: { key: string }) => {});
-
-      // @ts-expect-error
-      await assert.rejects(() => decoratedFn({ key: "value" }), {
-        name: "KeyGenerationError",
-        message:
-          "Unable to generate key from parameters. Invalid parameter type: object.",
-      });
-
-      // @ts-expect-error
-      await assert.rejects(() => decoratedFn(null), {
-        name: "KeyGenerationError",
-        message:
-          // TODO "Null" instead of object
-          "Unable to generate key from parameters. Invalid parameter type: object.",
-      });
-
-      // @ts-expect-error
-      await assert.rejects(() => decoratedFn(() => {}), {
-        name: "KeyGenerationError",
-        message:
-          "Unable to generate key from parameters. Invalid parameter type: function.",
-      });
-
-      // @ts-expect-error
-      await assert.rejects(() => decoratedFn([]), {
-        name: "KeyGenerationError",
-        message:
-          // TODO "array" instead of object.
-          "Unable to generate key from parameters. Invalid parameter type: object.",
-      });
-
-      // @ts-expect-error
-      await assert.rejects(() => decoratedFn(Symbol()), {
-        name: "KeyGenerationError",
-        message:
-          "Unable to generate key from parameters. Invalid parameter type: symbol.",
-      });
-
-      // @ts-expect-error
-      await assert.rejects(() => decoratedFn(100n), {
-        name: "KeyGenerationError",
-        message:
-          "Unable to generate key from parameters. Invalid parameter type: bigint.",
-      });
-    });
-
-    it("Throws error and removes coalesce key when the decorated function call fails", async () => {
+    it("Throws error and removes request from 'in flight' when request throws", async () => {
       let throwError = true;
       const fn = async (_: string) => {
         if (throwError) {
