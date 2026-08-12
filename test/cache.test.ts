@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 
 const defaultOpts = {
   ttl: 1000,
-  maxSize: 10,
+  size: 10,
 };
 
 describe("Cache", () => {
@@ -134,7 +134,7 @@ describe("Cache", () => {
       };
 
       context.mock.timers.enable({ apis: ["Date"] });
-      const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 10 });
+      const decorated: typeof stub = cache(stub, { ttl: 1000, size: 10 });
 
       assert.strictEqual(await decorated("test"), `test-${1}`);
       assert.strictEqual(called, 1);
@@ -160,7 +160,7 @@ describe("Cache", () => {
         return param;
       };
 
-      const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 2 });
+      const decorated: typeof stub = cache(stub, { ttl: 1000, size: 2 });
 
       await decorated("one");
       await decorated("two");
@@ -183,7 +183,7 @@ describe("Cache", () => {
       let called = 0;
       const stub = async (_: string) => called++;
 
-      const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 3 });
+      const decorated: typeof stub = cache(stub, { ttl: 1000, size: 3 });
 
       await decorated("one");
       await decorated("two");
@@ -217,7 +217,7 @@ describe("Cache", () => {
       };
 
       context.mock.timers.enable({ apis: ["Date"] });
-      const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 2 });
+      const decorated: typeof stub = cache(stub, { ttl: 1000, size: 2 });
 
       await decorated("one");
       await decorated("two");
@@ -245,11 +245,11 @@ describe("Cache", () => {
   });
 
   describe("Concurrency", () => {
-    it("Doesn't exceed maxSize when calls are concurrent", async () => {
+    it("Doesn't exceed size when calls are concurrent", async () => {
       let called = 0;
       const stub = async (_: string) => called++;
 
-      const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 2 });
+      const decorated: typeof stub = cache(stub, { ttl: 1000, size: 2 });
 
       await Promise.all([
         decorated("one"),
@@ -297,7 +297,7 @@ describe("Cache", () => {
         return param;
       };
 
-      const decorated: typeof stub = cache(stub, { ttl: 1000, maxSize: 1 });
+      const decorated: typeof stub = cache(stub, { ttl: 1000, size: 1 });
 
       assert.strictEqual(await decorated("one"), "one");
       assert.strictEqual(called, 1);
@@ -377,7 +377,7 @@ describe("Cache", () => {
       });
 
       // @ts-expect-error
-      assert.throws(() => cache(stub, { maxSize: 10 }), {
+      assert.throws(() => cache(stub, { size: 10 }), {
         name: "TypeError",
         message: "options.ttl is required",
       });
@@ -385,29 +385,29 @@ describe("Cache", () => {
       // @ts-expect-error
       assert.throws(() => cache(stub, { ttl: 1000 }), {
         name: "TypeError",
-        message: "options.maxSize is required",
+        message: "options.size is required",
       });
 
       // @ts-expect-error
-      assert.throws(() => cache(stub, { ttl: "1000", maxSize: 10 }), {
+      assert.throws(() => cache(stub, { ttl: "1000", size: 10 }), {
         name: "TypeError",
         message: "options.ttl must be a number",
       });
 
-      assert.throws(() => cache(stub, { ttl: 0, maxSize: 10 }), {
+      assert.throws(() => cache(stub, { ttl: 0, size: 10 }), {
         name: "TypeError",
         message: "options.ttl must be > 0",
       });
 
       // @ts-expect-error
-      assert.throws(() => cache(stub, { ttl: 1000, maxSize: "10" }), {
+      assert.throws(() => cache(stub, { ttl: 1000, size: "10" }), {
         name: "TypeError",
-        message: "options.maxSize must be a number",
+        message: "options.size must be a number",
       });
 
-      assert.throws(() => cache(stub, { ttl: 1000, maxSize: 0 }), {
+      assert.throws(() => cache(stub, { ttl: 1000, size: 0 }), {
         name: "TypeError",
-        message: "options.maxSize must be > 0",
+        message: "options.size must be > 0",
       });
     });
   });

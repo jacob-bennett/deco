@@ -3,7 +3,7 @@ import { createKey } from "./createKey.ts";
 
 type Options = {
   ttl: number;
-  maxSize: number;
+  size: number;
 };
 
 export const cache = <Args extends ValidDefaultArgs[], Return>(
@@ -13,7 +13,7 @@ export const cache = <Args extends ValidDefaultArgs[], Return>(
   validateArgs(fn, options);
 
   const store = new Map<string, { value: Return; expiresAt: number }>();
-  const { ttl, maxSize } = options;
+  const { ttl, size } = options;
 
   return async (...args: Args): Promise<Return> => {
     const key = createKey(...args);
@@ -35,7 +35,7 @@ export const cache = <Args extends ValidDefaultArgs[], Return>(
     const expiresAt = Date.now() + ttl;
     store.set(key, { value, expiresAt });
 
-    if (store.size > maxSize) {
+    if (store.size > size) {
       const leastRecentlyUsed = store.keys().next().value!;
       store.delete(leastRecentlyUsed);
     }
@@ -44,7 +44,7 @@ export const cache = <Args extends ValidDefaultArgs[], Return>(
   };
 };
 
-const validateArgs = (fn: unknown, options: Options) => {
+const validateArgs = (fn: unknown, options: unknown) => {
   if (typeof fn !== "function") {
     throw new TypeError("parameter must be a function");
   }
@@ -53,14 +53,11 @@ const validateArgs = (fn: unknown, options: Options) => {
     throw new TypeError("options are required");
   }
 
-  validatePositiveNumber(options.ttl, "options.ttl");
-  validatePositiveNumber(options.maxSize, "options.maxSize");
+  validatePositiveNumber((options as Options).ttl, "options.ttl");
+  validatePositiveNumber((options as Options).size, "options.size");
 };
 
-const validatePositiveNumber: (
-  val: number,
-  name: string,
-) => asserts val is number = (val, field) => {
+const validatePositiveNumber = (val: unknown, field: string) => {
   if (val === undefined) {
     throw new TypeError(`${field} is required`);
   }
