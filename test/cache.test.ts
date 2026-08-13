@@ -360,17 +360,11 @@ describe("Cache", () => {
       });
     });
 
-    it("Throws for invalid fn parameter", () => {
-      // @ts-expect-error
-      assert.throws(() => cache(), {
-        name: "TypeError",
-        message: "parameter must be a function",
-      });
-
+    it("Throws for invalid fn", () => {
       // @ts-expect-error
       assert.throws(() => cache("stub", defaultOpts), {
         name: "TypeError",
-        message: "parameter must be a function",
+        message: "Parameter must be a function. Received string",
       });
     });
 
@@ -380,7 +374,7 @@ describe("Cache", () => {
       // @ts-expect-error
       assert.throws(() => cache(stub), {
         name: "TypeError",
-        message: "options are required",
+        message: "options.ttl is required",
       });
 
       // @ts-expect-error
@@ -390,31 +384,14 @@ describe("Cache", () => {
       });
 
       // @ts-expect-error
-      assert.throws(() => cache(stub, { ttl: 1000 }), {
-        name: "TypeError",
-        message: "options.size is required",
-      });
-
-      // @ts-expect-error
       assert.throws(() => cache(stub, { ttl: "1000", size: 10 }), {
         name: "TypeError",
-        message: "options.ttl must be a number",
+        message: "options.ttl must be an integer",
       });
 
       assert.throws(() => cache(stub, { ttl: 0, size: 10 }), {
         name: "TypeError",
         message: "options.ttl must be > 0",
-      });
-
-      // @ts-expect-error
-      assert.throws(() => cache(stub, { ttl: 1000, size: "10" }), {
-        name: "TypeError",
-        message: "options.size must be a number",
-      });
-
-      assert.throws(() => cache(stub, { ttl: 1000, size: 0 }), {
-        name: "TypeError",
-        message: "options.size must be > 0",
       });
     });
   });

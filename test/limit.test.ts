@@ -192,18 +192,18 @@ describe("Concurrency", () => {
     // @ts-expect-error
     assert.throws(() => limit("str", 1), {
       name: "TypeError",
-      message: "parameter must be a function",
+      message: "Parameter must be a function. Received string",
     });
 
     // @ts-expect-error
     assert.throws(() => limit(() => {}, "str"), {
       name: "TypeError",
-      message: "limit must be a number",
+      message: "limit must be an integer",
     });
 
     assert.throws(() => limit(() => {}, -1), {
       name: "TypeError",
-      message: "limit must be >= 1",
+      message: "limit must be > 0",
     });
   });
 

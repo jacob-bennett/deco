@@ -1,5 +1,6 @@
 import type { DecoratedFn, Fn, ValidDefaultArgs } from "./types.ts";
 import { createKey } from "./createKey.ts";
+import { validate } from "./validate.ts";
 
 type Options = {
   ttl: number;
@@ -10,7 +11,9 @@ export const cache = <Args extends ValidDefaultArgs[], Return>(
   fn: Fn<Args, Return>,
   options: Options,
 ): DecoratedFn<Args, Return> => {
-  validateArgs(fn, options);
+  validate.fn(fn);
+  validate.positiveInteger(options?.ttl, "options.ttl");
+  validate.positiveInteger(options?.size, "options.size");
 
   const store = new Map<string, { value: Return; expiresAt: number }>();
   const { ttl, size } = options;
@@ -42,31 +45,4 @@ export const cache = <Args extends ValidDefaultArgs[], Return>(
 
     return value;
   };
-};
-
-const validateArgs = (fn: unknown, options: unknown) => {
-  if (typeof fn !== "function") {
-    throw new TypeError("parameter must be a function");
-  }
-
-  if (!options) {
-    throw new TypeError("options are required");
-  }
-
-  validatePositiveNumber((options as Options).ttl, "options.ttl");
-  validatePositiveNumber((options as Options).size, "options.size");
-};
-
-const validatePositiveNumber = (val: unknown, field: string) => {
-  if (val === undefined) {
-    throw new TypeError(`${field} is required`);
-  }
-
-  if (typeof val !== "number") {
-    throw new TypeError(`${field} must be a number`);
-  }
-
-  if (val < 1) {
-    throw new TypeError(`${field} must be > 0`);
-  }
 };

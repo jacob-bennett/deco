@@ -18,10 +18,9 @@ export function coalesce<Args extends unknown[], Return>(
   generateKey?: KeyGenerator<Args>,
 ): DecoratedFn<Args, Return> {
   const inFlightRequests: Map<string, Promise<Return>> = new Map();
-
+  // TODO validate fn and generateKey
   return async (...args: Args): Promise<Return> => {
     const key = generateKey ? generateKey(...args) : createKey(...args);
-
     const matchingRequest = inFlightRequests.get(key);
     if (matchingRequest) {
       return matchingRequest;
