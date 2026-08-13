@@ -10,7 +10,8 @@ Zero dependency collection of composable asynchronous decorators.
 
 - [x] Request coalescing
 - [x] Concurrency limiting
-- [ ] In-memory caching
+- [x] In-memory caching
+- [ ] Caching - custom key generator
 - [ ] Jitter
 - [ ] Rate limiting / Throttling
 - [ ] Retry mechanism
@@ -44,7 +45,7 @@ await Promise.all([coalescedGetUser(1), coalescedGetUser(1)]);
 
 #### Generating coalesce keys
 
-If the values passed to the coalesced function are not _strings_, _numbers_ or _booleans_, you'll need to provide a `generateKey` callback.
+If the values passed to the coalesced function are not _strings_, _integers_ or _booleans_, you'll need to provide a `generateKey` callback.
 
 ```javascript
 // Example async function, which takes an object as its input
@@ -80,6 +81,28 @@ const limitedGetUser = limit(getUser, 2);
 // The third request will not start until the first or second finishes
 await Promise.all([limitedGetUser(1), limitedGetUser(2), limitedGetUser(3)]);
 ```
+
+### Caching
+
+Store results in memory, serve on subsequent requests.
+
+```javascript
+import { cache } from "@jacben/deco";
+
+// Example async function
+const getUser = async (id) => {};
+
+// Cache results for 1 minute, with a maximum cache size of 100
+const cachedGetUser = cache(getUser, { size: 100, ttl: 60000 });
+
+// Fire request, load user
+await cachedGetUser(1);
+// Load result from memory, no request fires.
+await cachedGetUser(1);
+```
+
+> ⚠️ Currently, only _strings_, _integers_, and _booleans_ are supported as cache keys.  
+> Support for a custom `generateKey` callback, as seen in [coalesce](#generating-coalesce-keys), is in the [roadmap](#roadmap).
 
 ## Combining decorators
 
